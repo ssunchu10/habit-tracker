@@ -44,9 +44,11 @@ export class AuthController {
       }
 
       if (password.length < 8) {
-        res.status(400).json({ message: "Password must be at least 8 characters long" });
+        res
+          .status(400)
+          .json({ message: "Password must be at least 8 characters long" });
         return;
-      }  
+      }
 
       const hashedPassword = await saltAndHashPassword(password);
 
@@ -82,6 +84,12 @@ export class AuthController {
         res.status(400).json({ message: "Credentials required" });
       }
 
+      const existingUser = await this.userService.findUserByEmail(email);
+      if (!existingUser) {
+        res.status(409).json({ message: "User not registered" });
+        return;
+      }
+
       const user = await this.userService.findUserByCredentials(
         email,
         password
@@ -109,27 +117,29 @@ export class AuthController {
     }
   };
 
-  // getCurrentUser = async (req: Request, res: Response): Promise<void> => {
-  //   try {
-  //     const userId = req.user?.id;
+  getCurrentUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user?.id;
 
-  //     if (!userId) {
-  //       res.status(401).json({ message: "Unauthorized" });
-  //       return;
-  //     }
+      if (!userId) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
 
-  //     const user = await this.userService.findUserByID(userId);
-  //     const userData = user.toObject ? user.toObject() : JSON.parse(JSON.stringify(user));
+      const user = await this.userService.findUserByID(userId);
+      const userData = user.toObject
+        ? user.toObject()
+        : JSON.parse(JSON.stringify(user));
 
-  //     const { password_hash, ...safeUser } = userData;
+      const { password_hash, ...safeUser } = userData;
 
-  //     res.status(200).json({
-  //       user: safeUser,
-  //       message: "User fetched Sucessfully",
-  //     });
-  //   } catch (error) {
-  //     console.error("Get current user error:", error);
-  //     res.status(500).json({ message: "Failed to fetch user data" });
-  //   }
-  // };
+      res.status(200).json({
+        user: safeUser,
+        message: "User fetched Sucessfully",
+      });
+    } catch (error) {
+      console.error("Get current user error:", error);
+      res.status(500).json({ message: "Failed to fetch user data" });
+    }
+  };
 }
