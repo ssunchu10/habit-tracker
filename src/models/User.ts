@@ -9,6 +9,7 @@ export interface IUser extends Document {
     email: string;
     password_hash: string;
     created_at: Date;
+    updated_at: Date;
     last_login: Date;
 }
 
@@ -37,6 +38,10 @@ const UserSchema: Schema = new Schema({
       required: [true, 'Password hash is required']
     },
     created_at: {
+      type: Date,
+      default: Date.now
+    },
+    updated_at: {
       type: Date,
       default: Date.now
     },

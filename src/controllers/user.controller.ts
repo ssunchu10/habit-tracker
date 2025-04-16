@@ -29,6 +29,9 @@ export class UserController {
       if (email) updateData.email = email;
       
       const updatedUser = await this.userService.updateUser(userId, updateData);
+
+      updatedUser.updated_at = new Date();
+      await updatedUser.save();
       
       const userData = updatedUser.toObject
         ? updatedUser.toObject()
