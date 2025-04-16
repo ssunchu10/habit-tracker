@@ -7,39 +7,47 @@ export const authMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Authentication required" });
+      res.status(401).json({ message: "Authentication required" });
+      return;
     }
 
     const token = authHeader.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ message: "Authentication token missing" });
+      res.status(401).json({ message: "Authentication token missing" });
+      return;
     }
 
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
       console.error("JWT_SECRET not set in environment variables");
-      return res.status(500).json({ message: "Server configuration error" });
+      res.status(500).json({ message: "Server configuration error" });
+      return;
     }
 
     try {
-      const decoded = jwt.verify(token, secret) as { id: string; email: string };
-      
+      const decoded = jwt.verify(token, secret) as {
+        id: string;
+        email: string;
+      };
+
       req.user = { id: decoded.id } as IUser;
-      
+
       next();
     } catch (error) {
-      return res.status(401).json({ message: "Invalid or expired token" });
+      res.status(401).json({ message: "Invalid or expired token" });
+      return;
     }
   } catch (error) {
     console.error("Auth middleware error:", error);
-    return res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error" });
+    return;
   }
 };
 

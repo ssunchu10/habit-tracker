@@ -21,6 +21,42 @@ export class UserService {
     }
   }
 
+  async updateUser(id: string, userData: Partial<CreateUserInput>): Promise<IUser> {
+    try {
+      await connectDB();
+      const user = await User.findOneAndUpdate(
+        {id: id},
+        { $set: userData },
+        { new: true, runValidators: true }
+      );
+      
+      if (!user) {
+        throw new Error(`User not found`);
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("User update error:", error);
+      throw new Error("Failed to update user");
+    }
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      await connectDB();
+      const result = await User.findOneAndDelete({id: id});
+      
+      if (!result) {
+        throw new Error(`User not found`);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("User deletion error:", error);
+      throw new Error("Failed to delete user");
+    }
+  }
+
   async findUserByEmail(email: string): Promise<IUser | null> {
     try {
       await connectDB();

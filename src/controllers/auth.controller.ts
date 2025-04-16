@@ -137,9 +137,11 @@ export class AuthController {
         user: safeUser,
         message: "User fetched Sucessfully",
       });
+      return;
     } catch (error) {
       console.error("Get current user error:", error);
       res.status(500).json({ message: "Failed to fetch user data" });
+      return;
     }
   };
 }

@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
 import { connectDB } from "./lib/connectDB";
-import authRoutes from "./routes/auth.route";
+import routes from "./routes/index";
 
 const app: Express = express();
 
@@ -25,7 +25,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Habit Tracker API is running");
 });
 
-app.use("/api/auth", authRoutes);
+app.use("/api", routes);
 
 const PORT: string | number = parseInt(process.env.PORT || "3001");
 
