@@ -21,13 +21,10 @@ export class UserService {
     }
   }
 
-  async findUserByEmail(email: string): Promise<IUser> {
+  async findUserByEmail(email: string): Promise<IUser | null> {
     try {
       await connectDB();
       const user = await User.findOne({ email });
-      if (!user) {
-        throw new Error(`User not found`);
-      }
       return user;
     } catch (error) {
       console.error("User lookup error:", error);

@@ -21,8 +21,14 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT: string | number = process.env.PORT || 5000;
+app.get("/", (req: Request, res: Response) => {
+  res.send("Habit Tracker API is running");
+});
+
+app.use("/api/auth", authRoutes);
+
+const PORT: string | number = parseInt(process.env.PORT || "3001");
 
 app.listen(PORT, () => {
-  console.log(`Server is running on PORT: ${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

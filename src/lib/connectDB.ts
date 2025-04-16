@@ -19,7 +19,7 @@ export const connectDB =  async (): Promise<void> => {
         isConnected = connection.readyState === 1;
 
         if (isConnected) {
-            console.log("MongoDB is already connected at the database: "+  connection?.db?.databaseName);
+            console.log("MongoDB is connected at the database: "+  connection?.db?.databaseName);
            
         }
     } catch (error) {

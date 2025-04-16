@@ -17,13 +17,17 @@ export class AuthController {
       throw new Error("JWT_SECRET not set in environment variables");
     }
 
-    return jwt.sign({
-      id: user.id,
-      email: user.email,
-    }, secret, {
-        expiresIn: '7d'
-    });
-  }
+    return jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+      },
+      secret,
+      {
+        expiresIn: "7d",
+      }
+    );
+  };
 
   register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -32,6 +36,17 @@ export class AuthController {
         res.status(400).json({ message: "All fields are required" });
         return;
       }
+
+      const existingUser = await this.userService.findUserByEmail(email);
+      if (existingUser) {
+        res.status(409).json({ message: "Email already registered" });
+        return;
+      }
+
+      if (password.length < 8) {
+        res.status(400).json({ message: "Password must be at least 8 characters long" });
+        return;
+      }  
 
       const hashedPassword = await saltAndHashPassword(password);
 
@@ -43,8 +58,11 @@ export class AuthController {
       });
 
       const token = this.generateToken(user);
+      const userData = user.toObject
+        ? user.toObject()
+        : JSON.parse(JSON.stringify(user));
 
-      const { password_hash, ...safeUser } = user;
+      const { password_hash, ...safeUser } = userData;
 
       res.status(201).json({
         user: safeUser,
@@ -74,7 +92,11 @@ export class AuthController {
 
       const token = this.generateToken(user);
 
-      const { password_hash, ...safeUser } = user;
+      const userData = user.toObject
+        ? user.toObject()
+        : JSON.parse(JSON.stringify(user));
+
+      const { password_hash, ...safeUser } = userData;
 
       res.status(201).json({
         user: safeUser,
@@ -87,25 +109,27 @@ export class AuthController {
     }
   };
 
-  getCurrentUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const userId = req.user?.id;
+  // getCurrentUser = async (req: Request, res: Response): Promise<void> => {
+  //   try {
+  //     const userId = req.user?.id;
 
-      if (!userId) {
-        res.status(401).json({ message: "Unauthorized" });
-        return;
-      }
+  //     if (!userId) {
+  //       res.status(401).json({ message: "Unauthorized" });
+  //       return;
+  //     }
 
-      const user = await this.userService.findUserByID(userId);
+  //     const user = await this.userService.findUserByID(userId);
+  //     const userData = user.toObject ? user.toObject() : JSON.parse(JSON.stringify(user));
 
-      const { password_hash, ...safeUser } = user;
+  //     const { password_hash, ...safeUser } = userData;
 
-      res.status(201).json({
-        user: safeUser,
-        message: "User logged in Sucessfully",
-      });
-    } catch (error) {
-      console.error("");
-    }
-  };
+  //     res.status(200).json({
+  //       user: safeUser,
+  //       message: "User fetched Sucessfully",
+  //     });
+  //   } catch (error) {
+  //     console.error("Get current user error:", error);
+  //     res.status(500).json({ message: "Failed to fetch user data" });
+  //   }
+  // };
 }

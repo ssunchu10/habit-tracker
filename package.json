@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/server.ts"
   },
-  "type": "module",
+
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/cors": "^2.8.17",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.14.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "csrf": "^3.1.0",
@@ -20,6 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.2",
+    "ts-node": "^10.9.2",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
