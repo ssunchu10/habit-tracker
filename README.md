@@ -1,3 +1,7 @@
+Prisma migrate 
+npx prisma migrate dev --name init
+
+
 # habit-tracker
 
 💡 Idea: HabitHive

@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { UserService } from "../../services/userService";
-import { IUser } from "../../models/User";
+
+interface JwtPayload {
+  id: number;
+  email: string;
+}
 
 export const authMiddleware = async (
   req: Request,
@@ -32,12 +36,9 @@ export const authMiddleware = async (
     }
 
     try {
-      const decoded = jwt.verify(token, secret) as {
-        id: string;
-        email: string;
-      };
+      const decoded = jwt.verify(token, secret) as JwtPayload;
 
-      req.user = { id: decoded.id } as IUser;
+      (req as any).user = { id: decoded.id};
 
       next();
     } catch (error) {

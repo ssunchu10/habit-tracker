@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/userService";
+import { User } from "@prisma/client";
 
 export class UserController {
   private userService: UserService;
@@ -10,7 +11,7 @@ export class UserController {
 
   updateUser = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.params.id;
+      const userId = parseInt(req.params.id);
       const { first_name, last_name, email } = req.body;
       
       const existingUser = await this.userService.findUserByID(userId);
@@ -23,21 +24,13 @@ export class UserController {
         }
       }
       
-      const updateData: any = {};
+      const updateData: Partial<User> = {};
       if (first_name) updateData.first_name = first_name;
       if (last_name) updateData.last_name = last_name;
       if (email) updateData.email = email;
       
       const updatedUser = await this.userService.updateUser(userId, updateData);
-
-      updatedUser.updated_at = new Date();
-      await updatedUser.save();
-      
-      const userData = updatedUser.toObject
-        ? updatedUser.toObject()
-        : JSON.parse(JSON.stringify(updatedUser));
-      
-      const { password_hash, ...safeUser } = userData;
+      const { password_hash, ...safeUser } = updatedUser;
       
       res.status(200).json({
         user: safeUser,
@@ -53,8 +46,7 @@ export class UserController {
 
   deleteUser = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.params.id;
-      
+      const userId = parseInt(req.params.id);
       await this.userService.deleteUser(userId);
       
       res.status(200).json({
@@ -70,14 +62,11 @@ export class UserController {
   
   getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.params.id;
+      const userId = parseInt(req.params.id);
       
       const user = await this.userService.findUserByID(userId);
-      const userData = user.toObject
-        ? user.toObject()
-        : JSON.parse(JSON.stringify(user));
       
-      const { password_hash, ...safeUser } = userData;
+      const { password_hash, ...safeUser } = user;
       
       res.status(200).json({
         user: safeUser,

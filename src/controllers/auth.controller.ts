@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { UserService } from "../services/userService";
 import { saltAndHashPassword } from "../utils/password";
+import prisma from "../lib/prisma";
 
 export class AuthController {
   private userService: UserService;
@@ -60,11 +61,8 @@ export class AuthController {
       });
 
       const token = this.generateToken(user);
-      const userData = user.toObject
-        ? user.toObject()
-        : JSON.parse(JSON.stringify(user));
 
-      const { password_hash, ...safeUser } = userData;
+      const { password_hash, ...safeUser } = user;
 
       res.status(201).json({
         user: safeUser,
@@ -95,16 +93,14 @@ export class AuthController {
         password
       );
 
-      user.last_login = new Date();
-      await user.save();
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { last_login: new Date() },
+      });
 
       const token = this.generateToken(user);
 
-      const userData = user.toObject
-        ? user.toObject()
-        : JSON.parse(JSON.stringify(user));
-
-      const { password_hash, ...safeUser } = userData;
+      const { password_hash, ...safeUser } = user;
 
       res.status(201).json({
         user: safeUser,
@@ -127,11 +123,8 @@ export class AuthController {
       }
 
       const user = await this.userService.findUserByID(userId);
-      const userData = user.toObject
-        ? user.toObject()
-        : JSON.parse(JSON.stringify(user));
 
-      const { password_hash, ...safeUser } = userData;
+      const { password_hash, ...safeUser } = user;
 
       res.status(200).json({
         user: safeUser,

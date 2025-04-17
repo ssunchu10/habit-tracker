@@ -2,12 +2,9 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
-import { connectDB } from "./lib/connectDB";
 import routes from "./routes/index";
 
 const app: Express = express();
-
-connectDB();
 
 app.set("trust proxy", true);
 app.use(

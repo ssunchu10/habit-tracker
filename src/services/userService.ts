@@ -1,55 +1,40 @@
-import { connectDB } from "../lib/connectDB";
-import { IUser, User } from "../models/User";
+import prisma from "../lib/prisma";
 import { comparePassword } from "../utils/password";
+import { Prisma } from "@prisma/client";
 
-interface CreateUserInput {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password_hash: string;
-}
+type CreateUserInput = Prisma.UserCreateInput;
 
 export class UserService {
-  async createUser(newUserData: CreateUserInput): Promise<IUser> {
+  async createUser(newUserData: CreateUserInput) {
     try {
-      await connectDB();
-      const newUser = new User(newUserData);
-      return await newUser.save();
+      const newUser = await prisma.user.create({
+        data: newUserData,
+      });
+      return newUser;
     } catch (error) {
       console.error("User creation error:", error);
       throw new Error("Failed to create user");
     }
   }
 
-  async updateUser(id: string, userData: Partial<CreateUserInput>): Promise<IUser> {
+  async updateUser(id: number, userData: Partial<CreateUserInput>) {
     try {
-      await connectDB();
-      const user = await User.findOneAndUpdate(
-        {id: id},
-        { $set: userData },
-        { new: true, runValidators: true }
-      );
-      
-      if (!user) {
-        throw new Error(`User not found`);
-      }
-      
-      return user;
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: userData,
+      });
+      return updatedUser;
     } catch (error) {
       console.error("User update error:", error);
       throw new Error("Failed to update user");
     }
   }
 
-  async deleteUser(id: string): Promise<boolean> {
+  async deleteUser(id: number): Promise<boolean> {
     try {
-      await connectDB();
-      const result = await User.findOneAndDelete({id: id});
-      
-      if (!result) {
-        throw new Error(`User not found`);
-      }
-      
+      await prisma.user.delete({
+        where: { id },
+      });
       return true;
     } catch (error) {
       console.error("User deletion error:", error);
@@ -57,10 +42,9 @@ export class UserService {
     }
   }
 
-  async findUserByEmail(email: string): Promise<IUser | null> {
+  async findUserByEmail(email: string) {
     try {
-      await connectDB();
-      const user = await User.findOne({ email });
+      const user = await prisma.user.findUnique({ where: { email } });
       return user;
     } catch (error) {
       console.error("User lookup error:", error);
@@ -68,10 +52,9 @@ export class UserService {
     }
   }
 
-  async findUserByCredentials(email: string, password: string): Promise<IUser> {
+  async findUserByCredentials(email: string, password: string) {
     try {
-      await connectDB();
-      const user = await User.findOne({ email });
+      const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
         throw new Error(`Invalid email or password`);
       }
@@ -88,12 +71,13 @@ export class UserService {
     }
   }
 
-  async findUserByID(id: string): Promise<IUser> {
+  async findUserByID(id: number) {
     try {
-      await connectDB();
-      const user = await User.findOne({ id });
+      const user = await prisma.user.findUnique({
+        where: { id },
+      });
       if (!user) {
-        throw new Error(`User not found`);
+        throw new Error("User not found");
       }
       return user;
     } catch (error) {
