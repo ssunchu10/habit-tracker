@@ -1,8 +1,13 @@
 import prisma from "../lib/prisma";
 import { comparePassword } from "../utils/password";
-import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-type CreateUserInput = Prisma.UserCreateInput;
+type CreateUserInput = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password_hash: string;
+};
 
 export class UserService {
   async createUser(newUserData: CreateUserInput) {
@@ -26,6 +31,12 @@ export class UserService {
       return updatedUser;
     } catch (error) {
       console.error("User update error:", error);
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new Error("User not found");
+      }
       throw new Error("Failed to update user");
     }
   }
@@ -38,17 +49,22 @@ export class UserService {
       return true;
     } catch (error) {
       console.error("User deletion error:", error);
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new Error("User not found");
+      }
       throw new Error("Failed to delete user");
     }
   }
 
   async findUserByEmail(email: string) {
     try {
-      const user = await prisma.user.findUnique({ where: { email } });
-      return user;
+      return await prisma.user.findUnique({ where: { email } });
     } catch (error) {
       console.error("User lookup error:", error);
-      throw new Error("Failed to find user");
+      throw new Error("Failed to find user by email");
     }
   }
 
@@ -56,7 +72,7 @@ export class UserService {
     try {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
-        throw new Error(`Invalid email or password`);
+        throw new Error("Invalid email or password");
       }
 
       const isValid = await comparePassword(password, user.password_hash);
@@ -64,6 +80,7 @@ export class UserService {
       if (!isValid) {
         throw new Error("Invalid email or password");
       }
+
       return user;
     } catch (error) {
       console.error("Authentication error:", error);
@@ -76,13 +93,15 @@ export class UserService {
       const user = await prisma.user.findUnique({
         where: { id },
       });
+
       if (!user) {
         throw new Error("User not found");
       }
+
       return user;
     } catch (error) {
       console.error("User lookup error:", error);
-      throw new Error("Failed to find user");
+      throw new Error("Failed to find user by ID");
     }
   }
 }

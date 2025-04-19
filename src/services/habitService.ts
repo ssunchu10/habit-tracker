@@ -1,7 +1,16 @@
 import prisma from "../lib/prisma";
-import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-type CreateHabitInput = Prisma.HabitCreateInput;
+type CreateHabitInput = {
+  title: string;
+  description?: string;
+  frequency: string;
+  daysOfWeek?: string;
+  startDate: string;
+  endDate?: string;
+  is_active?: boolean;
+  userId: number;
+};
 
 export class HabitService {
   async createHabit(newHabitData: CreateHabitInput) {
@@ -10,27 +19,37 @@ export class HabitService {
         ...newHabitData,
         daysOfWeek: newHabitData.daysOfWeek || "Everyday",
         is_active: newHabitData.is_active ?? true,
+        user: {
+          connect: { id: newHabitData.userId },
+        },
       };
-      const newHabit = await prisma.habit.create({
-        data: data,
+
+      const { userId, ...habitData } = data;
+
+      return await prisma.habit.create({
+        data: habitData,
       });
-      return newHabit;
     } catch (error) {
       console.error("Habit creation error:", error);
       throw new Error("Failed to create habit");
     }
   }
 
-  async updateHabit(id: number, habitData: Partial<CreateHabitInput>) {
+  async updateHabit(
+    id: number,
+    habitData: Partial<Omit<CreateHabitInput, "userId">>
+  ) {
     try {
-      const updatedHabit = await prisma.habit.update({
+      return await prisma.habit.update({
         where: { id },
         data: habitData,
       });
-      return updatedHabit;
     } catch (error: unknown) {
       console.error("Habit update error:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
         throw new Error("Habit not found");
       }
       throw new Error("Failed to update habit");
@@ -39,16 +58,17 @@ export class HabitService {
 
   async deleteHabit(id: number): Promise<boolean> {
     try {
-      await prisma.habit.delete({
-        where: { id },
-      });
+      await prisma.habit.delete({ where: { id } });
       return true;
     } catch (error) {
-      console.error("Habit update error:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      console.error("Habit delete error:", error);
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
         throw new Error("Habit not found");
       }
-      throw new Error("Failed to update habit");
+      throw new Error("Failed to delete habit");
     }
   }
 
@@ -61,6 +81,7 @@ export class HabitService {
       if (!habit) {
         throw new Error("Habit not found");
       }
+
       return habit;
     } catch (error) {
       console.error("Habit lookup error:", error);
@@ -70,12 +91,10 @@ export class HabitService {
 
   async getHabitsByUser(userId: number) {
     try {
-      const userHabits = await prisma.habit.findMany({
-        where: { userId: userId },
-        orderBy: {createdAt: "desc"},
+      return await prisma.habit.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
       });
-
-      return userHabits;
     } catch (error) {
       console.error("Habits lookup error:", error);
       throw new Error("Failed to find habits");
@@ -86,9 +105,7 @@ export class HabitService {
     try {
       return await prisma.habit.update({
         where: { id },
-        data: {
-          is_active: is_active,
-        },
+        data: { is_active },
       });
     } catch (error) {
       console.error("Toggle habit error:", error);
@@ -98,8 +115,9 @@ export class HabitService {
 
   async getHabitsForToday(userId: number, today: string) {
     try {
-      const normalizedDay = today.charAt(0).toUpperCase() + today.slice(1).toLowerCase();
-  
+      const normalizedDay =
+        today.charAt(0).toUpperCase() + today.slice(1).toLowerCase();
+
       return await prisma.habit.findMany({
         where: {
           userId,
