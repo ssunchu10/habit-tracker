@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/userService";
-import { User } from "@prisma/client";
 
 export class UserController {
   private userService: UserService;
@@ -24,7 +23,7 @@ export class UserController {
         }
       }
       
-      const updateData: Partial<User> = {};
+      const updateData: { first_name?: string; last_name?: string; email?: string } = {};
       if (first_name) updateData.first_name = first_name;
       if (last_name) updateData.last_name = last_name;
       if (email) updateData.email = email;
