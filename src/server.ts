@@ -1,6 +1,10 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-dotenv.config();
+if (process.env.NODE_ENV === "production") {
+  dotenv.config({ path: './prod.env' });
+} else {
+  dotenv.config();
+}
 import cors from "cors";
 import routes from "./routes/index";
 
