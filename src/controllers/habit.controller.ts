@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { HabitService } from "../services/habitService";
-import { Habit } from "@prisma/client";
 
 export class HabitController {
   private habitService: HabitService;
