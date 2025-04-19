@@ -11,7 +11,7 @@
       "strict": true,
       "skipLibCheck": true
     },
-    "include": ["src/**/*.ts", "src/types/**/*.d.ts"],
+    "include": ["src/**/*.ts", "src/types"],
     "exclude": ["node_modules", "dist", "client"]
   }
   
