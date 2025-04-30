@@ -7,8 +7,10 @@ if (process.env.NODE_ENV === "production") {
 }
 import cors from "cors";
 import routes from "./routes/index";
+import cookieParser from "cookie-parser";
 
 const app: Express = express();
+app.use(cookieParser());
 
 app.set("trust proxy", true);
 app.use(

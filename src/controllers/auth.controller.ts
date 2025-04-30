@@ -11,6 +11,8 @@ export class AuthController {
     this.userService = new UserService();
   }
 
+  isProduction = process.env.NODE_ENV === "production";
+
   private generateToken = (user: any) => {
     const secret = process.env.JWT_SECRET;
 
@@ -64,11 +66,18 @@ export class AuthController {
 
       const { password_hash, ...safeUser } = user;
 
-      res.status(201).json({
-        user: safeUser,
-        token,
-        message: "User registered Sucessfully",
-      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: this.isProduction,
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+        .status(201)
+        .json({
+          user: safeUser,
+          message: "User registered Sucessfully",
+        });
     } catch (error) {
       console.error("Registration error:", error);
       res.status(500).json({ message: "Failed to register user" });
@@ -102,15 +111,33 @@ export class AuthController {
 
       const { password_hash, ...safeUser } = user;
 
-      res.status(201).json({
-        user: safeUser,
-        token,
-        message: "User logged in Sucessfully",
-      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: this.isProduction,
+          sameSite: "lax",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        })
+        .status(201)
+        .json({
+          user: safeUser,
+          message: "User registered Sucessfully",
+        });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Invalid Credentials" });
     }
+  };
+
+  logout = async (_req: Request, res: Response): Promise<void> => {
+    res
+      .clearCookie("token", {
+        httpOnly: true,
+        secure: this.isProduction,
+        sameSite: "lax",
+      })
+      .status(200)
+      .json({ message: "Logged out successfully" });
   };
 
   getCurrentUser = async (req: Request, res: Response): Promise<void> => {

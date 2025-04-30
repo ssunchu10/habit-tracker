@@ -13,65 +13,52 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies?.token;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       res.status(401).json({ message: "Authentication required" });
       return;
     }
 
-    const token = authHeader.split(" ")[1];
-
-    if (!token) {
-      res.status(401).json({ message: "Authentication token missing" });
-      return;
-    }
-
     const secret = process.env.JWT_SECRET;
-
     if (!secret) {
       console.error("JWT_SECRET not set in environment variables");
       res.status(500).json({ message: "Server configuration error" });
       return;
     }
 
-    try {
-      const decoded = jwt.verify(token, secret) as JwtPayload;
+    const decoded = jwt.verify(token, secret) as JwtPayload;
+    (req as any).user = { id: decoded.id };
 
-      (req as any).user = { id: decoded.id};
-
-      next();
-    } catch (error) {
-      res.status(401).json({ message: "Invalid or expired token" });
-      return;
-    }
+    return next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    res.status(500).json({ message: "Server error" });
-    return;
+    res.status(401).json({ message: "Invalid or expired token" });
   }
 };
 
-export const enhancedAuthMiddleware = (
+export const enhancedAuthMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
-  authMiddleware(req, res, async (err: any) => {
-    if (err) return next(err);
+): Promise<void> => {
+  try {
+    await authMiddleware(req, res, () => {});
 
-    if (req.user?.id) {
-      try {
-        const userService = new UserService();
-        const fullUser = await userService.findUserByID(req.user.id);
-        req.user = fullUser;
-        next();
-      } catch (error) {
-        console.error("Enhanced auth error:", error);
-        res.status(401).json({ message: "User not found" });
-      }
-    } else {
-      next();
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
-  });
+
+    const userService = new UserService();
+    const fullUser = await userService.findUserByID(userId);
+    (req as any).user = fullUser;
+
+    return next();
+  } catch (error) {
+    console.error("Enhanced auth error:", error);
+    res.status(401).json({ message: "User not found or token invalid" });
+    return;
+  }
 };
