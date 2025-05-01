@@ -121,7 +121,7 @@ export class AuthController {
         .status(201)
         .json({
           user: safeUser,
-          message: "User registered Sucessfully",
+          message: "User Logged In Sucessfully",
         });
     } catch (error) {
       console.error("Login error:", error);
