@@ -13,7 +13,7 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token = req.cookies?.token;
+    const token = req.cookies?.authToken;
 
     if (!token) {
       res.status(401).json({ message: "Authentication required" });

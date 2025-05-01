@@ -67,10 +67,10 @@ export class AuthController {
       const { password_hash, ...safeUser } = user;
 
       res
-        .cookie("token", token, {
+        .cookie("authToken", token, {
           httpOnly: true,
-          secure: this.isProduction,
-          sameSite: "lax",
+          secure: true,
+          sameSite: "none",
           maxAge: 7 * 24 * 60 * 60 * 1000,
         })
         .status(201)
@@ -112,10 +112,10 @@ export class AuthController {
       const { password_hash, ...safeUser } = user;
 
       res
-        .cookie("token", token, {
+        .cookie("authToken", token, {
           httpOnly: true,
-          secure: this.isProduction,
-          sameSite: "lax",
+          secure: true,
+          sameSite: "none",
           maxAge: 7 * 24 * 60 * 60 * 1000,
         })
         .status(201)
