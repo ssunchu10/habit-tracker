@@ -15,19 +15,27 @@ type CreateHabitInput = {
 export class HabitService {
   async createHabit(newHabitData: CreateHabitInput) {
     try {
+      if (!newHabitData.userId) {
+        throw new Error("Missing userId in habit creation");
+      }
+
       const data = {
-        ...newHabitData,
+        title: newHabitData.title,
+        description: newHabitData.description,
+        frequency: newHabitData.frequency,
         daysOfWeek: newHabitData.daysOfWeek || "Everyday",
         is_active: newHabitData.is_active ?? true,
+        startDate: new Date(newHabitData.startDate),
+        endDate: newHabitData.endDate
+          ? new Date(newHabitData.endDate)
+          : undefined,
         user: {
           connect: { id: newHabitData.userId },
         },
       };
 
-      const { userId, ...habitData } = data;
-
       return await prisma.habit.create({
-        data: habitData,
+        data,
       });
     } catch (error) {
       console.error("Habit creation error:", error);
